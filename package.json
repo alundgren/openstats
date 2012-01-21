@@ -2,6 +2,7 @@
   "name": "openstats",
   "version": "0.0.1",
   "dependencies": {
-    "express": "2.5.4"
+    "express": "2.5.4",
+    "http": "0.3.1"
   }
 }

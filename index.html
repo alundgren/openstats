@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Swedens total aid per country and year</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.2.2/underscore-min.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        google.load("visualization", "1", { packages: ["corechart"] });
+        function drawChart(d, totalAmount, year) {            
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Country');
+            data.addColumn('number', 'Million USD');
+            data.addRows(d);
+
+            var options = {
+                width: 800, height: 500,
+                title: 'Top 10 aid per country for ' + year + ' (Total: ' + totalAmount + ")",
+                hAxis: { title: 'Country', titleTextStyle: { color: 'red'} }
+            };
+
+            var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+        }
+        function reloadGraph(year) {
+            $.getJSON('/country/' + year, function (data) {
+                var graphData = _(data)
+                    .chain()
+                    .filter(function (d) { return d.name != "Globalt"; })
+                    .map(function (d) { return [d.name, Math.round(parseFloat(d.amount_usd / 1000000))]; })
+                    .sortBy(function (d) { return d[1]; })
+                    .last(10)
+                    .reverse()
+                    .value();
+                var totalAmount = Math.round(parseFloat(_(data)
+                    .chain()
+                    .filter(function (d) { return d.name === "Globalt"; })
+                    .pluck('amount_usd')
+                    .first()
+                    .value()) / 1000000);
+                drawChart(graphData, totalAmount, year);
+            });
+        }
+        $(document).ready(function () {
+            $('#year a').click(function (e) {
+                e.preventDefault();
+                var year = parseInt($(this).html(), 10);
+                reloadGraph(year);
+            });
+            reloadGraph(2008);
+        }); 
+    </script>
+  </head>
+  <body>
+    <div id="year">
+        <span>Year:</span>
+        <a href="#">2007</a>
+        <a href="#">2008</a>
+        <a href="#">2009</a>
+        <a href="#">2010</a>
+        <a href="#">2011</a>
+    </div>
+    <div id="chart_div"></div>
+  </body>
+</html>
